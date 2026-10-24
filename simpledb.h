@@ -15,8 +15,8 @@ typedef enum { EXECUTE_SUCESS, EXECUTE_TABLE_FULL } execute_result_t;
 
 typedef struct {
   uint32_t id;
-  char username[COLUMN_USERNAME_SIZE];
-  char email[COLUMN_EMAIL_SIZE];
+  char username[COLUMN_USERNAME_SIZE + 1];
+  char email[COLUMN_EMAIL_SIZE + 1];
 } row_t;
 
 typedef enum {
@@ -26,7 +26,9 @@ typedef enum {
 
 typedef enum {
   PREPARE_SUCCESS,
+  PREPARE_NEGATIVE_ID,
   PREPARE_SYNTAX_ERROR,
+  PREPARE_STRING_TOO_LONG,
   PREPARE_UNRECOGNIZED_STATEMENT
 } prepare_result_t;
 
@@ -68,6 +70,8 @@ void close_input_buffer(input_buffer_t *input_buffer);
 meta_command_result_t do_meta_command(input_buffer_t *input_buffer);
 prepare_result_t prepare_statement(input_buffer_t *input_buffer,
                                    statement_t *statement);
+prepare_result_t prepare_insert(input_buffer_t *input_buffer,
+                                statement_t *statement);
 execute_result_t execute_statement(statement_t *statement, table_t *table);
 execute_result_t execute_insert(statement_t *statement, table_t *table);
 execute_result_t execute_select(statement_t *statement, table_t *table);
