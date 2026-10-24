@@ -3,7 +3,7 @@ CFLAGS = -Wall -Wextra -g
 
 OUT_DIR = out
 
-TARGET = $(OUT_DIR)/simple-sql
+TARGET = $(OUT_DIR)/simpledb
 
 SRCS = main.c
 OBJS = $(patsubst %.c, $(OUT_DIR)/%.o, $(SRCS))
@@ -23,4 +23,3 @@ clean:
 	rm -rf $(OUT_DIR)
 
 .PHONY: all clean
-
