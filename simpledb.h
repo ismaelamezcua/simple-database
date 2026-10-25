@@ -59,15 +59,22 @@ const uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE;
 const uint32_t TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES;
 
 typedef struct {
-  uint32_t num_rows;
+  int file_descriptor;
+  uint32_t file_length;
   void *pages[TABLE_MAX_PAGES];
+} pager_t;
+
+typedef struct {
+  uint32_t num_rows;
+  pager_t *pager;
 } table_t;
 
 input_buffer_t *new_input_buffer();
 void print_prompt();
 void read_input(input_buffer_t *input_buffer);
 void close_input_buffer(input_buffer_t *input_buffer);
-meta_command_result_t do_meta_command(input_buffer_t *input_buffer);
+meta_command_result_t do_meta_command(input_buffer_t *input_buffer,
+                                      table_t *table);
 prepare_result_t prepare_statement(input_buffer_t *input_buffer,
                                    statement_t *statement);
 prepare_result_t prepare_insert(input_buffer_t *input_buffer,
@@ -80,6 +87,10 @@ void deserialize_row(void *source, row_t *destination);
 void *row_slot(table_t *table, uint32_t row_num);
 void print_row(row_t *row);
 table_t *new_table();
-void free_table(table_t *table);
+table_t *db_open(const char *filename);
+void db_close(table_t *table);
+pager_t *pager_open(const char *filename);
+void *get_page(pager_t *pager, uint32_t page_num);
+void pager_flush(pager_t *pager, uint32_t page_num, uint32_t size);
 
 #endif /* SIMPLEDB_H */
