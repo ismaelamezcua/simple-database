@@ -130,20 +130,25 @@ execute_result_t execute_insert(statement_t *statement, table_t *table) {
   }
 
   row_t *row_to_insert = &(statement->row_to_insert);
+  cursor_t *cursor = table_end(table);
 
-  serialize_row(row_to_insert, row_slot(table, table->num_rows));
+  serialize_row(row_to_insert, cursor_value(cursor));
   table->num_rows += 1;
 
   return EXECUTE_SUCESS;
 }
 
 execute_result_t execute_select(statement_t *statement, table_t *table) {
+  cursor_t *cursor = table_start(table);
   row_t row;
 
-  for (uint32_t i = 0; i < table->num_rows; i++) {
-    deserialize_row(row_slot(table, i), &row);
+  while (!(cursor->end_of_table)) {
+    deserialize_row(cursor_value(cursor), &row);
     print_row(&row);
+    cursor_advance(cursor);
   }
+
+  free(cursor);
 
   return EXECUTE_SUCESS;
 }
@@ -324,11 +329,37 @@ void deserialize_row(void *source, row_t *destination) {
   memcpy(&(destination->email), source + EMAIL_OFFSET, EMAIL_SIZE);
 }
 
-void *row_slot(table_t *table, uint32_t row_num) {
+void *cursor_value(cursor_t *cursor) {
+  uint32_t row_num = cursor->row_num;
   uint32_t page_num = row_num / ROWS_PER_PAGE;
-  void *page = get_page(table->pager, page_num);
+  void *page = get_page(cursor->table->pager, page_num);
   uint32_t row_offset = row_num % ROWS_PER_PAGE;
   uint32_t byte_offset = row_offset * ROW_SIZE;
 
   return page + byte_offset;
+}
+
+cursor_t *table_start(table_t *table) {
+  cursor_t *cursor = malloc(sizeof(cursor_t));
+  cursor->table = table;
+  cursor->row_num = 0;
+  cursor->end_of_table = (table->num_rows == 0);
+
+  return cursor;
+}
+
+cursor_t *table_end(table_t *table) {
+  cursor_t *cursor = malloc(sizeof(cursor_t));
+  cursor->table = table;
+  cursor->row_num = table->num_rows;
+  cursor->end_of_table = true;
+
+  return cursor;
+}
+
+void cursor_advance(cursor_t *cursor) {
+  cursor->row_num += 1;
+  if (cursor->row_num >= cursor->table->num_rows) {
+    cursor->end_of_table = true;
+  }
 }

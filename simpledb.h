@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 #define COLUMN_USERNAME_SIZE 32
 #define COLUMN_EMAIL_SIZE 255
@@ -69,6 +70,12 @@ typedef struct {
   pager_t *pager;
 } table_t;
 
+typedef struct {
+  table_t *table;
+  uint32_t row_num;
+  bool end_of_table; // Indicates a position one past the last element.
+} cursor_t;
+
 input_buffer_t *new_input_buffer();
 void print_prompt();
 void read_input(input_buffer_t *input_buffer);
@@ -84,7 +91,6 @@ execute_result_t execute_insert(statement_t *statement, table_t *table);
 execute_result_t execute_select(statement_t *statement, table_t *table);
 void serialize_row(row_t *source, void *destination);
 void deserialize_row(void *source, row_t *destination);
-void *row_slot(table_t *table, uint32_t row_num);
 void print_row(row_t *row);
 table_t *new_table();
 table_t *db_open(const char *filename);
@@ -92,5 +98,9 @@ void db_close(table_t *table);
 pager_t *pager_open(const char *filename);
 void *get_page(pager_t *pager, uint32_t page_num);
 void pager_flush(pager_t *pager, uint32_t page_num, uint32_t size);
+void *cursor_value(cursor_t *cursor);
+cursor_t *table_start(table_t *table);
+cursor_t *table_end(table_t *table);
+void cursor_advance(cursor_t *cursor);
 
 #endif /* SIMPLEDB_H */
